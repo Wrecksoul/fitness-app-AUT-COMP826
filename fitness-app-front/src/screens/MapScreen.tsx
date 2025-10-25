@@ -1,13 +1,5 @@
-// src/screens/MapScreen.tsx
-
-import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Button,
-  Platform,
-} from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, StyleSheet, Button } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -31,9 +23,10 @@ const MapScreen = () => {
   const route = useRoute<MapScreenRouteProp>();
   const { routeId } = route.params ?? { routeId: "unknown" };
 
-  const [checkpoints, setCheckpoints] = useState<Checkpoint[]>(
-    initialCheckpoints
-  );
+  const [checkpoints, setCheckpoints] =
+    useState<Checkpoint[]>(initialCheckpoints);
+
+  const mapRef = useRef<MapView>(null);
 
   const allCheckedIn = checkpoints.every((cp) => cp.visited);
 
@@ -41,14 +34,32 @@ const MapScreen = () => {
     const nextIndex = checkpoints.findIndex((cp) => !cp.visited);
     if (nextIndex !== -1) {
       const updated = [...checkpoints];
+      console.log("✅ Updating checkpoint0:", updated[nextIndex]);
       updated[nextIndex].visited = true;
+      console.log("✅ Updating checkpoint1:", updated[nextIndex]);
       setCheckpoints(updated);
+
+      // 使用 requestAnimationFrame 保证平滑
+      requestAnimationFrame(() => {
+        const target = updated[nextIndex];
+        mapRef.current?.animateCamera(
+          {
+            center: {
+              latitude: target.latitude,
+              longitude: target.longitude,
+            },
+            zoom: 16,
+          },
+          { duration: 800 }
+        );
+      });
     }
   };
 
   return (
     <View style={styles.container}>
       <MapView
+        ref={mapRef}
         style={styles.map}
         initialRegion={{
           latitude: initialCheckpoints[0].latitude,
@@ -59,6 +70,7 @@ const MapScreen = () => {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
+        {/* 路线连接 */}
         <Polyline
           coordinates={checkpoints.map((cp) => ({
             latitude: cp.latitude,
@@ -68,13 +80,17 @@ const MapScreen = () => {
           strokeWidth={4}
         />
 
-        {checkpoints.map((cp) => (
-          <Marker
-            key={cp.id}
-            coordinate={{ latitude: cp.latitude, longitude: cp.longitude }}
-            pinColor={cp.visited ? "green" : "red"}
-          />
-        ))}
+        {/* Checkpoints */}
+        {checkpoints.map((cp) => {
+          console.log(`📍 Rendering Marker ${cp.id} - visited: ${cp.visited}`);
+          return (
+            <Marker
+              key={`${cp.id}-${cp.visited}`} // 👈 每次 visited 改变都会触发 Marker 重建
+              coordinate={{ latitude: cp.latitude, longitude: cp.longitude }}
+              pinColor={cp.visited ? "green" : "red"}
+            />
+          );
+        })}
       </MapView>
 
       <View style={styles.footer}>
@@ -84,7 +100,9 @@ const MapScreen = () => {
           {checkpoints.length}
         </Text>
         <Button
-          title={allCheckedIn ? "🎉 All Checkpoints Completed" : "Check In Next"}
+          title={
+            allCheckedIn ? "🎉 All Checkpoints Completed" : "Check In Next"
+          }
           onPress={handleNextCheckIn}
           disabled={allCheckedIn}
         />
@@ -94,12 +112,8 @@ const MapScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  map: {
-    flex: 1,
-  },
+  container: { flex: 1 },
+  map: { flex: 1 },
   footer: {
     padding: 12,
     backgroundColor: "#f2f2f2",
