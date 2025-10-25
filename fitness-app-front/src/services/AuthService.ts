@@ -5,7 +5,7 @@ export default class AuthService {
     // simulate a delay like a real API
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    if (email === 'test@foxmail.com' && password === '123456') {
+    if (email === 'test@foxmail.com' || password === '123456' || email ==='1') {
       return {
         id: 1,
         email,
