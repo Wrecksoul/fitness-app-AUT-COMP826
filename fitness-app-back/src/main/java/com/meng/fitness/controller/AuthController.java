@@ -7,7 +7,9 @@ import com.meng.fitness.repository.UserRepository;
 import com.meng.fitness.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -20,7 +22,8 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -39,8 +42,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         User existingUser = userRepository.findByUsername(request.getUsername());
+//        System.out.println(BCrypt.hashpw(request.getPassword(), BCrypt.gensalt()));
+//        System.out.println("🔑 密文：" + existingUser.getPassword());
+//        System.out.println("🧪 匹配：" + passwordEncoder.matches(request.getPassword(), existingUser.getPassword()));
         if (existingUser == null || !passwordEncoder.matches(request.getPassword(), existingUser.getPassword())) {
-            return ResponseEntity.status(401).body("Invalid username or password.");
+            return ResponseEntity.status(401).body("Invalid username or password");
         }
 
         String token = jwtUtil.generateToken(request.getUsername());

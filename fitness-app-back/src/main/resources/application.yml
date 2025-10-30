@@ -3,10 +3,10 @@ server:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: jdbc:h2:file:~/fitnessdb
     driver-class-name: org.h2.Driver
     username: sa
-    password: sa
+    password:
   h2:
     console:
       enabled: true
@@ -15,8 +15,13 @@ spring:
         web-allow-others: true
   jpa:
     hibernate:
-      ddl-auto: update  # create tables automatically，optional: create, update, create-drop, none
-    show-sql: true      # console output SQL
+      ddl-auto: none   # not create tables by @Entity
+    show-sql: true
     properties:
       hibernate:
         format_sql: true
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      data-locations: classpath:data.sql
