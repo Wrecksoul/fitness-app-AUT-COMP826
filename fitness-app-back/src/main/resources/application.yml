@@ -1,16 +1,22 @@
+server:
+  port: 8080
+
 spring:
   datasource:
-    url: jdbc:h2:file:~/test
-    username: san
-    password:
+    url: jdbc:h2:mem:testdb
     driver-class-name: org.h2.Driver
-    schema: classpath:schema.sql
-    data: classpath:data.sql
-
+    username: sa
+    password: sa
   h2:
     console:
       enabled: true
       path: /h2-console
       settings:
-        trace: true
         web-allow-others: true
+  jpa:
+    hibernate:
+      ddl-auto: update  # create tables automatically，optional: create, update, create-drop, none
+    show-sql: true      # console output SQL
+    properties:
+      hibernate:
+        format_sql: true
