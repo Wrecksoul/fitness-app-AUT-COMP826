@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { View, Text, StyleSheet, Button } from "react-native";
+import { View, Text, StyleSheet, Button, Modal, Image, Alert } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -25,6 +25,8 @@ const MapScreen = () => {
 
   const [checkpoints, setCheckpoints] =
     useState<Checkpoint[]>(initialCheckpoints);
+  const [showReward, setShowReward] = useState(false);
+  const [showMedal, setShowMedal] = useState(false);
 
   const mapRef = useRef<MapView>(null);
 
@@ -53,6 +55,15 @@ const MapScreen = () => {
           { duration: 800 }
         );
       });
+
+      // Show reward animation
+      setShowReward(true);
+      setTimeout(() => setShowReward(false), 1500);
+
+      // If last checkpoint, show medal after reward
+      if (nextIndex === checkpoints.length - 1) {
+        setTimeout(() => setShowMedal(true), 1800);
+      }
     }
   };
 
@@ -107,6 +118,22 @@ const MapScreen = () => {
           disabled={allCheckedIn}
         />
       </View>
+      {showReward && (
+        <View style={styles.rewardContainer}>
+          <Text style={styles.rewardText}>🎉 Check-in Success! +10 Coins</Text>
+        </View>
+      )}
+      {showMedal && (
+        <Modal transparent animationType="fade" visible={showMedal}>
+          <View style={styles.medalOverlay}>
+            <View style={styles.medalBox}>
+              <Text style={styles.medalText}>🏅 Congratulations!</Text>
+              <Text>You’ve completed the route!</Text>
+              <Button title="OK" onPress={() => setShowMedal(false)} />
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 };
@@ -125,6 +152,37 @@ const styles = StyleSheet.create({
   },
   progress: {
     fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 8,
+  },
+  rewardContainer: {
+    position: "absolute",
+    top: "40%",
+    alignSelf: "center",
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 10,
+    elevation: 4,
+  },
+  rewardText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "goldenrod",
+  },
+  medalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
+  },
+  medalBox: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  medalText: {
+    fontSize: 20,
     fontWeight: "bold",
     marginBottom: 8,
   },
