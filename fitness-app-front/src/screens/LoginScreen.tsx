@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
 
@@ -26,6 +26,9 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
+      <View style={styles.logoContainer}>
+        <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
+      </View>
       <Text style={styles.title}>Login</Text>
 
       <TextInput
@@ -63,7 +66,12 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, justifyContent: 'center' },
+  container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
+  logoContainer: { alignItems: 'center', marginBottom: 30 },
+  logo: {
+    width: 200,
+    height: 200,
+  },
   title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginVertical: 8, borderRadius: 4 },
   error: { color: 'red', marginBottom: 10, textAlign: 'center' },
