@@ -10,9 +10,11 @@ import {
 } from "react-native";
 import MapView from "react-native-maps";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RootStackParamList } from "../navigation/AppNavigator";
 
 const DashboardScreen: React.FC = () => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <View style={styles.container}>
@@ -39,14 +41,14 @@ const DashboardScreen: React.FC = () => {
 
       {/* Bottom menu */}
       <View style={styles.bottomMenu}>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigation.navigate("Profile")}>
           <Text style={styles.menuText}>👤</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigation.navigate("History")}>
           <Text style={styles.menuText}>🕘</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.menuButton}>
-          <Text style={styles.menuText}>≡</Text>
+        <TouchableOpacity style={styles.menuButton} onPress={() => navigation.navigate("Treasure")}>
+          <Text style={styles.menuText}>💎</Text>
         </TouchableOpacity>
       </View>
     </View>
