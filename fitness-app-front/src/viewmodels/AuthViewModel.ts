@@ -27,35 +27,33 @@ export function useAuthViewModel() {
     setLoading(false);
   };
 
-    // 👇 添加新状态变量
-    const [displayName, setDisplayName] = useState('');
+  const signup = async (
+    onSuccess: (user: User) => void,
+    onFailure?: () => void
+  ) => {
+    setLoading(true);
+    setError(null);
 
-    // 👇 添加 signup 方法
-    const signup = async (
-        onSuccess: (user: User) => void,
-        onFailure?: () => void
-    ) => {
-        setLoading(true);
-        setError(null);
+    const user = await AuthService.register(email, password);
 
-        const user = await AuthService.register(email, password, displayName);
+    if (user) {
+      onSuccess(user);
+    } else {
+      setError('Sign up failed');
+      onFailure?.();
+    }
 
-        if (user) {
-            onSuccess(user);
-        } else {
-            setError('Sign up failed');
-            onFailure?.();
-        }
+    setLoading(false);
+  };
 
-        setLoading(false);
-    };
-
-    return {
-        email, setEmail,
-        password, setPassword,
-        displayName, setDisplayName,
-        loading, error,
-        login,
-        signup
-    };
+  return {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    loading,
+    error,
+    login,
+    signup
+  };
 }

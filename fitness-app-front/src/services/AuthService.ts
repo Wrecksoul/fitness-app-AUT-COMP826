@@ -30,19 +30,32 @@ export default class AuthService {
     }
   }
 
-  static async register(email: string, password: string, displayName: string): Promise<User | null> {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+  static async register(email: string, password: string): Promise<User | null> {
+    try {
+      const response = await fetch(`${BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: email, password })
+      });
 
-    if (email && password && displayName) {
-      return {
-        id: Date.now(),
-        email,
-        displayName,
-        token: 'mock-token-signup'
-      };
+      const { payload, raw } = await AuthService.safeParseResponse(response);
+
+      if (!response.ok) {
+        console.warn('Signup failed', payload ?? raw ?? response.statusText);
+        return null;
+      }
+
+      const user = AuthService.mapToUser(payload, raw, email);
+      if (!user) {
+        console.warn('Signup response missing expected fields', payload ?? raw);
+        return null;
+      }
+
+      return user;
+    } catch (error) {
+      console.error('Signup error', error);
+      return null;
     }
-
-    return null;
   }
 
   private static async safeParseResponse(response: Response): Promise<{ payload: any; raw: string | null }> {
@@ -54,7 +67,7 @@ export default class AuthService {
     try {
       return { payload: JSON.parse(raw), raw };
     } catch {
-      console.warn('Login response is not JSON', raw);
+      console.warn('Auth response is not JSON', raw);
       return { payload: null, raw };
     }
   }
@@ -77,7 +90,8 @@ export default class AuthService {
       return {
         id: Number.isFinite(Number(idSource)) ? Number(idSource) : 0,
         email: container?.email ?? container?.username ?? fallbackEmail,
-        displayName: container?.displayName ?? container?.name ?? container?.username ?? fallbackEmail,
+        displayName:
+          container?.displayName ?? container?.name ?? container?.username ?? fallbackEmail,
         token
       };
     }

@@ -8,7 +8,6 @@ export default function SignUpScreen() {
   const {
     email, setEmail,
     password, setPassword,
-    displayName, setDisplayName,
     loading, error,
     signup
   } = useAuthViewModel();
@@ -32,13 +31,6 @@ export default function SignUpScreen() {
         style={styles.logo}
       />
       <Text style={styles.title}>Sign Up</Text>
-
-      <TextInput
-        placeholder="Display Name"
-        style={styles.input}
-        value={displayName}
-        onChangeText={setDisplayName}
-      />
 
       <TextInput
         placeholder="Email"
