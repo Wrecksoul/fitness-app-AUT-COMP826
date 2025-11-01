@@ -1,8 +1,12 @@
 // src/screens/ProfileScreen.tsx
 import React from 'react';
 import { View, Text, StyleSheet, Button } from 'react-native';
+import { useAuthViewModel } from '../viewmodels/AuthViewModel';
 
 const ProfileScreen: React.FC = () => {
+  const { currentUser } = useAuthViewModel();
+  const displayName = currentUser?.displayName?.trim() || currentUser?.email || 'User';
+
   const handleChangePassword = () => {
     // TODO: navigate to change password screen or open modal
     alert("Change password feature coming soon");
@@ -11,7 +15,7 @@ const ProfileScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>👤 Profile</Text>
-      <Text style={styles.sectionTitle}>🏃 Fitness Stats</Text>
+      <Text style={styles.sectionTitle}>🏃 {displayName}&apos;s Fitness Stats</Text>
       <Text style={styles.stat}>🔥 Calories Burned: 5,780 kcal</Text>
       <Text style={styles.stat}>📏 Total Distance: 42.3 km</Text>
       <Text style={styles.stat}>⏱️ Total Time: 6h 30m</Text>

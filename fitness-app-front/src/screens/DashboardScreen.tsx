@@ -12,9 +12,19 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import backgroundImg from "../../assets/background.png";
+import { useAuthViewModel } from "../viewmodels/AuthViewModel";
 
 const DashboardScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { logout, loading } = useAuthViewModel();
+
+  const handleLogout = async () => {
+    await logout();
+    navigation.reset({
+      index: 0,
+      routes: [{ name: "Login" }],
+    });
+  };
 
   return (
     <ImageBackground source={backgroundImg} style={styles.background}>
@@ -30,6 +40,9 @@ const DashboardScreen: React.FC = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.bigButton} onPress={() => navigation.navigate("Profile" as never)}>
           <Text style={styles.buttonText}>Profile</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.bigButton} onPress={handleLogout} disabled={loading}>
+          <Text style={styles.buttonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>

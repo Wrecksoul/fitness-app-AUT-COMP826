@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
@@ -9,8 +9,19 @@ export default function LoginScreen() {
     email, setEmail,
     password, setPassword,
     loading, error,
-    login
+    login,
+    currentUser,
+    initializing
   } = useAuthViewModel();
+
+  useEffect(() => {
+    if (!initializing && currentUser) {
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Dashboard' }]
+      });
+    }
+  }, [currentUser, initializing, navigation]);
 
   const handleLogin = () => {
     login(
@@ -23,6 +34,14 @@ export default function LoginScreen() {
       }
     );
   };
+
+  if (initializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -66,6 +85,7 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff' },
   container: { flex: 1, padding: 24, justifyContent: 'center', backgroundColor: '#fff' },
   logoContainer: { alignItems: 'center', marginBottom: 30 },
   logo: {
