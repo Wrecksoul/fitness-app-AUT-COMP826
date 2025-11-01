@@ -59,6 +59,7 @@ fitness-app-back/*.ipr
 
 # VS Code
 fitness-app-back/.vscode/
+.vscode/
 
 # Eclipse / STS
 fitness-app-back/.apt_generated
