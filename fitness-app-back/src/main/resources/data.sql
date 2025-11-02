@@ -22,7 +22,15 @@ VALUES (1, 1, 1, -36.8485, 174.7633);
 
 MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
 KEY (id)
-VALUES (2, 1, 2, -36.8500, 174.7650);
+VALUES (2, 1, 2, -36.8494, 174.7646);
+
+MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
+KEY (id)
+VALUES (5, 1, 3, -36.8508, 174.7664);
+
+MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
+KEY (id)
+VALUES (6, 1, 4, -36.8519, 174.7681);
 
 MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
 KEY (id)
@@ -30,4 +38,12 @@ VALUES (3, 2, 1, -36.8467, 174.7700);
 
 MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
 KEY (id)
-VALUES (4, 2, 2, -36.8450, 174.7750);
+VALUES (4, 2, 2, -36.8454, 174.7736);
+
+MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
+KEY (id)
+VALUES (7, 2, 3, -36.8445, 174.7768);
+
+MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
+KEY (id)
+VALUES (8, 2, 4, -36.8436, 174.7792);
