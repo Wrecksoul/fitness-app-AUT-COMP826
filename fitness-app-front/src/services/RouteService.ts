@@ -1,51 +1,77 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BASE_URL from '../config';
 import { Route } from '../models/Route';
+import { AUTH_USER_KEY } from '../constants/storageKeys';
 
 type ParsedResponse = {
   payload: unknown;
   raw: string | null;
 };
 
+type ServiceResult<T> = {
+  data: T | null;
+  unauthorized: boolean;
+};
+
 export default class RouteService {
   private static readonly ROUTES_ENDPOINT = `${BASE_URL}/routes`;
 
-  static async getRoutes(): Promise<Route[] | null> {
+  static async getRoutes(): Promise<ServiceResult<Route[]>> {
     try {
-      const response = await fetch(RouteService.ROUTES_ENDPOINT);
+      const requestInit = await RouteService.withAuth();
+      const response = await fetch(RouteService.ROUTES_ENDPOINT, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
+
+      RouteService.logResponse('GET', RouteService.ROUTES_ENDPOINT, response.status, payload, raw);
+
+      if (RouteService.isUnauthorized(response)) {
+        await RouteService.handleUnauthorized();
+        return { data: null, unauthorized: true };
+      }
 
       if (!response.ok) {
         console.warn('Failed to fetch routes', payload ?? raw ?? response.statusText);
-        return null;
+        return { data: null, unauthorized: false };
       }
 
       if (!Array.isArray(payload)) {
         console.warn('Unexpected routes payload', payload ?? raw);
-        return null;
+        return { data: null, unauthorized: false };
       }
 
-      return payload
+      const routes = payload
         .map(RouteService.mapToRoute)
         .filter((route): route is Route => route !== null);
+
+      return { data: routes, unauthorized: false };
     } catch (error) {
       console.error('Routes fetch error', error);
-      return null;
+      return { data: null, unauthorized: false };
     }
   }
 
-  static async getRoute(routeId: string): Promise<Route | null> {
+  static async getRoute(routeId: string): Promise<ServiceResult<Route>> {
     if (!routeId) {
-      return null;
+      return { data: null, unauthorized: false };
     }
 
     try {
-      const response = await fetch(`${RouteService.ROUTES_ENDPOINT}/${routeId}`);
+      const requestInit = await RouteService.withAuth();
+      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}`;
+      const response = await fetch(endpoint, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
+
+      RouteService.logResponse('GET', endpoint, response.status, payload, raw);
+
+      if (RouteService.isUnauthorized(response)) {
+        await RouteService.handleUnauthorized();
+        return { data: null, unauthorized: true };
+      }
 
       if (response.ok) {
         const route = RouteService.mapToRoute(payload);
         if (route) {
-          return route;
+          return { data: route, unauthorized: false };
         }
       } else {
         console.warn('Failed to fetch route', routeId, payload ?? raw ?? response.statusText);
@@ -54,12 +80,43 @@ export default class RouteService {
       console.error('Route fetch error', error);
     }
 
-    const routes = await RouteService.getRoutes();
-    if (!routes) {
-      return null;
+    const routesResult = await RouteService.getRoutes();
+    if (routesResult.unauthorized) {
+      return { data: null, unauthorized: true };
     }
 
-    return routes.find((route) => route.id === routeId) ?? null;
+    const route = routesResult.data?.find((item) => item.id === routeId) ?? null;
+    return { data: route, unauthorized: false };
+  }
+
+  private static async withAuth(init: RequestInit = {}): Promise<RequestInit> {
+    const token = await RouteService.getToken();
+    if (!token) {
+      return init;
+    }
+
+    const headers = new Headers(init.headers as HeadersInit | undefined);
+    headers.set('Authorization', `Bearer ${token}`);
+
+    return { ...init, headers };
+  }
+
+  private static async getToken(): Promise<string | null> {
+    try {
+      const stored = await AsyncStorage.getItem(AUTH_USER_KEY);
+      if (!stored) {
+        return null;
+      }
+
+      const parsed = JSON.parse(stored);
+      if (parsed && typeof parsed.token === 'string' && parsed.token.length > 0) {
+        return parsed.token;
+      }
+    } catch (error) {
+      console.error('Failed to read auth token', error);
+    }
+
+    return null;
   }
 
   private static async parseResponse(response: Response): Promise<ParsedResponse> {
@@ -109,7 +166,7 @@ export default class RouteService {
           longitude,
         };
       })
-      .filter((cp): cp is Route['checkpoints'][number] => cp !== null);
+      .filter((cp: Route['checkpoints'][number] | null): cp is Route['checkpoints'][number] => cp !== null);
 
     return {
       id: String(id),
@@ -118,5 +175,26 @@ export default class RouteService {
       distanceKm: Number(payload.distanceKm ?? payload.distance ?? 0),
       checkpoints,
     };
+  }
+
+  private static isUnauthorized(response: Response) {
+    return response.status === 401 || response.status === 403;
+  }
+
+  private static async handleUnauthorized() {
+    try {
+      await AsyncStorage.removeItem(AUTH_USER_KEY);
+    } catch (error) {
+      console.error('Failed to clear auth token', error);
+    }
+  }
+
+  private static logResponse(method: string, url: string, status: number, payload: unknown, raw: string | null) {
+    const tag = `[RouteService] ${method} ${url}`;
+    if (payload !== null && payload !== undefined) {
+      console.log(tag, 'status:', status, 'payload:', payload);
+    } else {
+      console.log(tag, 'status:', status, 'raw:', raw);
+    }
   }
 }

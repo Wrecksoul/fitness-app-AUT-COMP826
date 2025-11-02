@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import { useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
 import RouteService from "../services/RouteService";
 import { Route as RouteModel } from "../models/Route";
+import { useAuthViewModel } from "../viewmodels/AuthViewModel";
 
 type MapScreenRouteProp = RouteProp<RootStackParamList, "Map">;
 
@@ -25,6 +26,9 @@ const fallbackRegion = {
 const MapScreen = () => {
   const route = useRoute<MapScreenRouteProp>();
   const { routeId } = route.params ?? { routeId: "unknown" };
+  const navigation = useNavigation<any>();
+  const { logout } = useAuthViewModel();
+  const unauthorizedHandledRef = useRef(false);
 
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,10 +46,32 @@ const MapScreen = () => {
     const loadRoute = async () => {
       setLoading(true);
 
-      const fetchedRoute: RouteModel | null = await RouteService.getRoute(routeId);
+      const result = await RouteService.getRoute(routeId);
       if (cancelled) {
         return;
       }
+
+      if (result.unauthorized) {
+        if (!unauthorizedHandledRef.current) {
+          unauthorizedHandledRef.current = true;
+          Alert.alert('Session expired', 'Please log in again.', [
+            {
+              text: 'OK',
+              onPress: () => {
+                logout().finally(() => {
+                  navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+                });
+              }
+            }
+          ]);
+        }
+        setCheckpoints([]);
+        setLoading(false);
+        return;
+      }
+
+      unauthorizedHandledRef.current = false;
+      const fetchedRoute: RouteModel | null = result.data;
 
       if (fetchedRoute && fetchedRoute.checkpoints.length > 0) {
         const mappedCheckpoints = fetchedRoute.checkpoints.map((cp) => ({
@@ -80,7 +106,7 @@ const MapScreen = () => {
     return () => {
       cancelled = true;
     };
-  }, [routeId]);
+  }, [routeId, logout, navigation]);
 
   const handleNextCheckIn = () => {
     const nextIndex = checkpoints.findIndex((cp) => !cp.visited);
@@ -143,7 +169,10 @@ const MapScreen = () => {
             longitude: cp.longitude,
           }))}
           strokeColor="#1E90FF"
-          strokeWidth={4}
+          strokeWidth={6}
+          lineCap="round"
+          lineJoin="round"
+          geodesic
         />
 
         {/* Checkpoints */}

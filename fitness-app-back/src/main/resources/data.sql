@@ -14,7 +14,7 @@ VALUES (1, 'City Explorer', 'Explore the downtown area and check in at key spots
 
 MERGE INTO routes (id, name, description, distance_km)
 KEY (id)
-VALUES (2, 'Harbour Run', 'Run along the beautiful Auckland Harbour.', 5.2);
+VALUES (2, 'Harbour Run', 'Run along the beautiful Auckland Harbour.', 4.2);
 
 MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
 KEY (id)
@@ -43,7 +43,3 @@ VALUES (4, 2, 2, -36.8454, 174.7736);
 MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
 KEY (id)
 VALUES (7, 2, 3, -36.8445, 174.7768);
-
-MERGE INTO route_checkpoints (id, route_id, sequence_order, latitude, longitude)
-KEY (id)
-VALUES (8, 2, 4, -36.8436, 174.7792);

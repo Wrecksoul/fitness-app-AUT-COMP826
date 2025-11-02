@@ -2,8 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import AuthService from '../services/AuthService';
 import { User } from '../models/User';
-
-const AUTH_USER_KEY = 'auth_user';
+import { AUTH_USER_KEY } from '../constants/storageKeys';
 
 export function useAuthViewModel() {
   const [email, setEmail] = useState('');
@@ -43,7 +42,7 @@ export function useAuthViewModel() {
     restoreSession();
   }, []);
 
-  const login = async (
+  const login = useCallback(async (
     onSuccess: (user: User) => void,
     onFailure?: () => void
   ) => {
@@ -62,9 +61,9 @@ export function useAuthViewModel() {
     }
 
     setLoading(false);
-  };
+  }, [email, password, persistUser]);
 
-  const signup = async (
+  const signup = useCallback(async (
     onSuccess: (user: User) => void,
     onFailure?: () => void
   ) => {
@@ -83,9 +82,9 @@ export function useAuthViewModel() {
     }
 
     setLoading(false);
-  };
+  }, [email, password, persistUser]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -96,7 +95,7 @@ export function useAuthViewModel() {
     await persistUser(null);
 
     setLoading(false);
-  };
+  }, [persistUser]);
 
   return {
     email,

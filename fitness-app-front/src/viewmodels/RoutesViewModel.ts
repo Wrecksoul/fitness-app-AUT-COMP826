@@ -8,20 +8,27 @@ export const useRoutesViewModel = () => {
   const [routes, setRoutes] = useState<Route[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   const loadRoutes = useCallback(async () => {
     setLoading(true);
     setError(null);
+    setUnauthorized(false);
 
-    const fetchedRoutes = await RouteService.getRoutes();
-    if (fetchedRoutes) {
-      setRoutes(fetchedRoutes);
-      if (fetchedRoutes.length === 0) {
-        setError("No routes available");
-      }
-    } else {
+    const result = await RouteService.getRoutes();
+
+    if (result.unauthorized) {
       setRoutes([]);
-      setError("Failed to load routes");
+      setUnauthorized(true);
+      setError("Session expired. Please log in again.");
+      setLoading(false);
+      return;
+    }
+
+    const fetchedRoutes = result.data ?? [];
+    setRoutes(fetchedRoutes);
+    if (fetchedRoutes.length === 0) {
+      setError("No routes available");
     }
 
     setLoading(false);
@@ -31,5 +38,5 @@ export const useRoutesViewModel = () => {
     loadRoutes();
   }, [loadRoutes]);
 
-  return { routes, loading, error, refresh: loadRoutes };
+  return { routes, loading, error, unauthorized, refresh: loadRoutes };
 };
