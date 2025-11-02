@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.meng</groupId>
     <artifactId>fitness</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>fitness</name>
     <description>AUT</description>
     <properties>
@@ -83,7 +83,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.meng.fitness.FitnessApplication</mainClass>
-                    <skip>true</skip>
+                    <skip>false</skip>
                 </configuration>
                 <executions>
                     <execution>
