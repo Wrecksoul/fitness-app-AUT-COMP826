@@ -1,0 +1,1 @@
+curl --request GET --url http://localhost:8080/routes --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJhbGljZSIsImlhdCI6MTc2MjA3NzA2NCwiZXhwIjoxNzYyMDgwNjY0fQ.ZHSInz66fMPDnsjCnGp1dGaMKGfxfVOXn6Zp6wJieG6D5XUyRKdW-NhmxG4smMe6DAT-aW7IovNLcEUXMb6yxA'

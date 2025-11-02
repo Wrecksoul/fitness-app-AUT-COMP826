@@ -21,8 +21,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/auth/login", "/auth/register","/health", "/h2-console/**").permitAll()
-//                 .antMatchers("/**").permitAll()
+//                .antMatchers("/auth/login", "/auth/register","/health", "/h2-console/**").permitAll()
+                 .antMatchers("/**").permitAll()
                 .anyRequest().authenticated();
 
         // Allow H2 console

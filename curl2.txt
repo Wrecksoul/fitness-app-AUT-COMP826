@@ -1,0 +1,4 @@
+curl --request POST --url http://localhost:8080/auth/register --header 'Content-Type: application/json' --data '{
+    "username": "newuser",
+    "password": "123456"
+  }'
