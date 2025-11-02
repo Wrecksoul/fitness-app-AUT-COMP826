@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, Alert } from "react-native";
+import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../navigation/AppNavigator";
@@ -34,6 +34,7 @@ const MapScreen = () => {
   const mapRef = useRef<MapView>(null);
 
   const allCheckedIn = checkpoints.length > 0 && checkpoints.every((cp) => cp.visited);
+  const isDisabled = loading || checkpoints.length === 0 || allCheckedIn;
 
   useEffect(() => {
     let cancelled = false;
@@ -164,13 +165,19 @@ const MapScreen = () => {
           Progress: {checkpoints.filter((cp) => cp.visited).length}/
           {checkpoints.length}
         </Text>
-        <Button
-          title={
-            allCheckedIn ? "🎉 All Checkpoints Completed" : "Check In Next"
-          }
-          onPress={handleNextCheckIn}
-          disabled={loading || checkpoints.length === 0 || allCheckedIn}
-        />
+        <TouchableOpacity
+          style={[styles.checkInButton, isDisabled && styles.checkInButtonDisabled]}
+          onPress={() => {
+            if (!isDisabled) {
+              handleNextCheckIn();
+            }
+          }}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.checkInButtonText, isDisabled && styles.checkInButtonTextDisabled]}>
+            {allCheckedIn ? "🎉 All Checkpoints Completed" : "Check In Next"}
+          </Text>
+        </TouchableOpacity>
       </View>
       {showReward && (
         <View style={styles.rewardContainer}>
@@ -250,6 +257,25 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     marginBottom: 8,
+  },
+  checkInButton: {
+    backgroundColor: "#1E90FF",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  checkInButtonDisabled: {
+    backgroundColor: "#A9A9A9",
+  },
+  checkInButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+  checkInButtonTextDisabled: {
+    color: "#f2f2f2",
   },
 });
 
