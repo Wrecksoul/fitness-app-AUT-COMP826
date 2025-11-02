@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import BASE_URL from '../config';
 import { Route } from '../models/Route';
 import { AUTH_USER_KEY } from '../constants/storageKeys';
+import { CheckIn } from '../models/CheckIn';
 
 type ParsedResponse = {
   payload: unknown;
@@ -177,6 +178,71 @@ export default class RouteService {
     };
   }
 
+  static async getCheckIns(routeId: string, username: string): Promise<ServiceResult<CheckIn[]>> {
+    try {
+      const requestInit = await RouteService.withAuth();
+      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}/checkins?username=${encodeURIComponent(username)}`;
+      const response = await fetch(endpoint, requestInit);
+      const { payload, raw } = await RouteService.parseResponse(response);
+
+      RouteService.logResponse('GET', endpoint, response.status, payload, raw);
+
+      if (RouteService.isUnauthorized(response)) {
+        await RouteService.handleUnauthorized();
+        return { data: null, unauthorized: true };
+      }
+
+      if (!response.ok || !Array.isArray(payload)) {
+        return { data: null, unauthorized: false };
+      }
+
+      const checkins = payload
+        .map(RouteService.mapToCheckIn)
+        .filter((ci: CheckIn | null): ci is CheckIn => ci !== null);
+
+      return { data: checkins, unauthorized: false };
+    } catch (error) {
+      console.error('Check-ins fetch error', error);
+      return { data: null, unauthorized: false };
+    }
+  }
+
+  static async createCheckIn(routeId: string, checkpointId: string, username: string): Promise<ServiceResult<CheckIn>> {
+    try {
+      const requestInit = await RouteService.withAuth({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          username,
+          checkpointId: Number(checkpointId)
+        })
+      });
+
+      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}/checkins`;
+      const response = await fetch(endpoint, requestInit);
+      const { payload, raw } = await RouteService.parseResponse(response);
+
+      RouteService.logResponse('POST', endpoint, response.status, payload, raw);
+
+      if (RouteService.isUnauthorized(response)) {
+        await RouteService.handleUnauthorized();
+        return { data: null, unauthorized: true };
+      }
+
+      if (!response.ok) {
+        return { data: null, unauthorized: false };
+      }
+
+      const checkIn = RouteService.mapToCheckIn(payload);
+      return { data: checkIn, unauthorized: false };
+    } catch (error) {
+      console.error('Create check-in error', error);
+      return { data: null, unauthorized: false };
+    }
+  }
+
   private static isUnauthorized(response: Response) {
     return response.status === 401 || response.status === 403;
   }
@@ -196,5 +262,29 @@ export default class RouteService {
     } else {
       console.log(tag, 'status:', status, 'raw:', raw);
     }
+  }
+
+  private static mapToCheckIn(payload: any): CheckIn | null {
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const id = payload.id ?? payload.checkInId ?? payload.uuid;
+    const routeId = payload.routeId ?? payload.route?.id;
+    const checkpointId = payload.checkpointId ?? payload.checkpoint?.id ?? null;
+    const username = payload.username ?? payload.user?.username ?? payload.user;
+    const checkedAt = payload.checkedAt ?? payload.timestamp ?? payload.createdAt;
+
+    if (!id || !routeId || !username || !checkedAt) {
+      return null;
+    }
+
+    return {
+      id: String(id),
+      routeId: String(routeId),
+      checkpointId: checkpointId != null ? String(checkpointId) : null,
+      username: String(username),
+      checkedAt: String(checkedAt),
+    };
   }
 }

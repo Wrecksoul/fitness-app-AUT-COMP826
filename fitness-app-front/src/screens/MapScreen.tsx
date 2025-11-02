@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { View, Text, StyleSheet, Button, Modal, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
@@ -27,7 +27,7 @@ const MapScreen = () => {
   const route = useRoute<MapScreenRouteProp>();
   const { routeId } = route.params ?? { routeId: "unknown" };
   const navigation = useNavigation<any>();
-  const { logout } = useAuthViewModel();
+  const { currentUser, logout } = useAuthViewModel();
   const unauthorizedHandledRef = useRef(false);
 
   const [checkpoints, setCheckpoints] = useState<Checkpoint[]>([]);
@@ -39,6 +39,24 @@ const MapScreen = () => {
 
   const allCheckedIn = checkpoints.length > 0 && checkpoints.every((cp) => cp.visited);
   const isDisabled = loading || checkpoints.length === 0 || allCheckedIn;
+
+  const handleUnauthorized = useCallback(() => {
+    if (unauthorizedHandledRef.current) {
+      return;
+    }
+
+    unauthorizedHandledRef.current = true;
+    Alert.alert('Session expired', 'Please log in again.', [
+      {
+        text: 'OK',
+        onPress: () => {
+          logout().finally(() => {
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+          });
+        }
+      }
+    ]);
+  }, [logout, navigation]);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,19 +70,7 @@ const MapScreen = () => {
       }
 
       if (result.unauthorized) {
-        if (!unauthorizedHandledRef.current) {
-          unauthorizedHandledRef.current = true;
-          Alert.alert('Session expired', 'Please log in again.', [
-            {
-              text: 'OK',
-              onPress: () => {
-                logout().finally(() => {
-                  navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
-                });
-              }
-            }
-          ]);
-        }
+        handleUnauthorized();
         setCheckpoints([]);
         setLoading(false);
         return;
@@ -106,9 +112,9 @@ const MapScreen = () => {
     return () => {
       cancelled = true;
     };
-  }, [routeId, logout, navigation]);
+  }, [routeId, handleUnauthorized]);
 
-  const handleNextCheckIn = () => {
+  const handleNextCheckIn = async () => {
     const nextIndex = checkpoints.findIndex((cp) => !cp.visited);
     if (nextIndex !== -1) {
       const updated = [...checkpoints];
@@ -139,6 +145,16 @@ const MapScreen = () => {
       // If last checkpoint, show medal after reward
       if (nextIndex === checkpoints.length - 1) {
         setTimeout(() => setShowMedal(true), 1800);
+      }
+
+      if (currentUser) {
+        const checkpoint = updated[nextIndex];
+        const result = await RouteService.createCheckIn(routeId, checkpoint.id, currentUser.email);
+        if (result.unauthorized) {
+          handleUnauthorized();
+        }
+      } else {
+        console.warn('Cannot record check-in without an authenticated user');
       }
     }
   };
