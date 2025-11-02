@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import BASE_URL from '../config';
+import { getBaseUrl } from '../config';
 import { Route } from '../models/Route';
 import { AUTH_USER_KEY } from '../constants/storageKeys';
 import { CheckIn } from '../models/CheckIn';
@@ -15,15 +15,18 @@ type ServiceResult<T> = {
 };
 
 export default class RouteService {
-  private static readonly ROUTES_ENDPOINT = `${BASE_URL}/routes`;
+  private static routesEndpoint() {
+    return `${getBaseUrl()}/routes`;
+  }
 
   static async getRoutes(): Promise<ServiceResult<Route[]>> {
     try {
       const requestInit = await RouteService.withAuth();
-      const response = await fetch(RouteService.ROUTES_ENDPOINT, requestInit);
+      const endpoint = RouteService.routesEndpoint();
+      const response = await fetch(endpoint, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
 
-      RouteService.logResponse('GET', RouteService.ROUTES_ENDPOINT, response.status, payload, raw);
+      RouteService.logResponse('GET', endpoint, response.status, payload, raw);
 
       if (RouteService.isUnauthorized(response)) {
         await RouteService.handleUnauthorized();
@@ -58,7 +61,7 @@ export default class RouteService {
 
     try {
       const requestInit = await RouteService.withAuth();
-      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}`;
+      const endpoint = `${RouteService.routesEndpoint()}/${routeId}`;
       const response = await fetch(endpoint, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
 
@@ -181,7 +184,7 @@ export default class RouteService {
   static async getCheckIns(routeId: string, username: string): Promise<ServiceResult<CheckIn[]>> {
     try {
       const requestInit = await RouteService.withAuth();
-      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}/checkins?username=${encodeURIComponent(username)}`;
+      const endpoint = `${RouteService.routesEndpoint()}/${routeId}/checkins?username=${encodeURIComponent(username)}`;
       const response = await fetch(endpoint, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
 
@@ -220,7 +223,7 @@ export default class RouteService {
         })
       });
 
-      const endpoint = `${RouteService.ROUTES_ENDPOINT}/${routeId}/checkins`;
+      const endpoint = `${RouteService.routesEndpoint()}/${routeId}/checkins`;
       const response = await fetch(endpoint, requestInit);
       const { payload, raw } = await RouteService.parseResponse(response);
 

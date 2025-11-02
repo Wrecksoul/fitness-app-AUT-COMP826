@@ -1,7 +1,8 @@
-import React, { useEffect } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet, Image } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, Button, ActivityIndicator, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthViewModel } from '../viewmodels/AuthViewModel';
+import { useServerConfigViewModel } from '../viewmodels/ServerConfigViewModel';
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -13,6 +14,20 @@ export default function LoginScreen() {
     currentUser,
     initializing
   } = useAuthViewModel();
+  const {
+    serverIp,
+    loading: serverConfigLoading,
+    error: serverConfigError,
+    updateServerIp
+  } = useServerConfigViewModel();
+
+  const [ipInput, setIpInput] = useState(serverIp);
+  const [ipStatus, setIpStatus] = useState<string | null>(null);
+  const [showServerConfig, setShowServerConfig] = useState(false);
+
+  useEffect(() => {
+    setIpInput(serverIp);
+  }, [serverIp]);
 
   useEffect(() => {
     if (!initializing && currentUser) {
@@ -35,6 +50,12 @@ export default function LoginScreen() {
     );
   };
 
+  const handleSaveServerIp = async () => {
+    setIpStatus(null);
+    const success = await updateServerIp(ipInput.trim());
+    setIpStatus(success ? 'Server address saved' : null);
+  };
+
   if (initializing) {
     return (
       <View style={styles.loadingContainer}>
@@ -48,6 +69,37 @@ export default function LoginScreen() {
       <View style={styles.logoContainer}>
         <Image source={require('../../assets/logo.png')} style={styles.logo} resizeMode="contain" />
       </View>
+      <TouchableOpacity
+        style={styles.serverToggle}
+        onPress={() => setShowServerConfig((prev) => !prev)}
+      >
+        <Text style={styles.serverToggleText}>
+          {showServerConfig ? 'Hide Server Settings ▲' : 'Edit Server Address ▼'}
+        </Text>
+      </TouchableOpacity>
+
+      {showServerConfig && (
+        <View style={styles.serverSection}>
+          <Text style={styles.sectionLabel}>Server Address</Text>
+          <View style={styles.serverRow}>
+            <TextInput
+              placeholder="Enter server IP"
+              style={[styles.input, styles.serverInput]}
+              autoCapitalize="none"
+              keyboardType="decimal-pad"
+              value={ipInput}
+              onChangeText={(value) => {
+                setIpInput(value);
+                setIpStatus(null);
+              }}
+            />
+            <Button title="Apply" onPress={handleSaveServerIp} disabled={serverConfigLoading} />
+          </View>
+          {serverConfigError && <Text style={styles.error}>{serverConfigError}</Text>}
+          {ipStatus && <Text style={styles.success}>{ipStatus}</Text>}
+        </View>
+      )}
+
       <Text style={styles.title}>Login</Text>
 
       <TextInput
@@ -68,7 +120,7 @@ export default function LoginScreen() {
 
       {error && <Text style={styles.error}>{error}</Text>}
 
-      {loading ? (
+      {(loading || serverConfigLoading) ? (
         <ActivityIndicator />
       ) : (
         <Button title="Login" onPress={handleLogin} />
@@ -93,7 +145,14 @@ const styles = StyleSheet.create({
     height: 200,
   },
   title: { fontSize: 24, marginBottom: 20, textAlign: 'center' },
+  sectionLabel: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
+  serverToggle: { marginBottom: 16, alignItems: 'center' },
+  serverToggleText: { color: '#1E90FF', fontWeight: '600' },
+  serverSection: { marginBottom: 16 },
   input: { borderWidth: 1, borderColor: '#ccc', padding: 12, marginVertical: 8, borderRadius: 4 },
+  serverRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 8 },
+  serverInput: { flex: 1, marginRight: 12, marginVertical: 0 },
   error: { color: 'red', marginBottom: 10, textAlign: 'center' },
+  success: { color: 'green', marginBottom: 10, textAlign: 'center' },
   link: { color: 'blue', marginTop: 20, textAlign: 'center' }
 });

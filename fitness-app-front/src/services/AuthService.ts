@@ -1,10 +1,10 @@
 import { User } from '../models/User';
-import BASE_URL from '../config';
+import { getBaseUrl } from '../config';
 
 export default class AuthService {
   static async login(email: string, password: string): Promise<User | null> {
     try {
-      const response = await fetch(`${BASE_URL}/auth/login`, {
+      const response = await fetch(`${getBaseUrl()}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password })
@@ -32,7 +32,7 @@ export default class AuthService {
 
   static async register(email: string, password: string): Promise<User | null> {
     try {
-      const response = await fetch(`${BASE_URL}/auth/register`, {
+      const response = await fetch(`${getBaseUrl()}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username: email, password })
