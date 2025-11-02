@@ -34,6 +34,10 @@ fitness-app-AUT-COMP826/
 ├── fitness-app-front/    # Expo/React Native frontend project
 ├── fitness-0.0.1.jar     # pre-built backend jar example
 ├── .gitignore            # gitignore file
+├── .PerformanceTest.py            # back-end API performance test scrip
+├── .curl.txt            # login for PerformanceTest.py 
+├── .curl2.txt            # signup
+├── .curl3.txt            # get routes
 └── README.md             # This guide
 ```
 
